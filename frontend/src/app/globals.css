@@ -135,3 +135,56 @@ textarea {
     animation: none;
   }
 }
+
+/* Print / save-as-PDF. The dashboard is dark and full of chrome that wastes ink and space,
+   so printing switches to a light, single-column document and drops navigation. */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  nav,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  [class*="md:pl-60"] {
+    padding-left: 0 !important;
+  }
+  section,
+  aside,
+  div {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  [class*="border-line"] {
+    border-color: #d1d5db !important;
+  }
+  [class*="text-ink"],
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  td,
+  th,
+  li {
+    color: #111827 !important;
+  }
+  [class*="overflow-x-auto"],
+  [class*="overflow-y-auto"] {
+    overflow: visible !important;
+  }
+  table {
+    min-width: 0 !important;
+    page-break-inside: auto;
+  }
+  tr,
+  section {
+    page-break-inside: avoid;
+  }
+}

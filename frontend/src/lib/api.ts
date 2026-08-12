@@ -243,6 +243,23 @@ export const api = {
   listAnalyses: () =>
     request<{ analyses: AnalysisSummary[] }>("/analyses").then((d) => d.analyses),
 
+  // Server sets Content-Disposition; the blob is turned into a download by the caller.
+  exportUrl: (id: string) => `${API_BASE}/analyses/${id}/export`,
+
+  downloadReport: async (id: string, filename: string) => {
+    const response = await fetch(`${API_BASE}/analyses/${id}/export`);
+    if (!response.ok) throw new ApiError("Could not generate the report.");
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `specguard_${filename.replace(/\.[^.]+$/, "")}.md`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
+
   deleteAnalysis: (id: string) =>
     request<{ analysis_id: string; deleted: boolean }>(`/analyses/${id}`, {
       method: "DELETE",

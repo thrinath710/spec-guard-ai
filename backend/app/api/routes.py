@@ -1,7 +1,8 @@
+import re
 from collections import Counter
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response, UploadFile, status
 
 from backend.app.ai.workflow import run_analysis
 from backend.app.db.repository import repository
@@ -20,6 +21,7 @@ from backend.app.services.document_processor import (
     DocumentValidationError,
 )
 from backend.app.services.progress import AnalysisCancelled, ProgressTracker
+from backend.app.services.report import build_markdown_report
 
 router = APIRouter()
 processor = DocumentProcessor()
@@ -304,6 +306,26 @@ def get_tests(analysis_id: str, category: str | None = None, priority: str | Non
             "total": len(tests),
             "by_category": dict(Counter(t.category for t in tests)),
             "by_priority": dict(Counter(t.priority for t in tests)),
+        },
+    )
+
+
+@router.get("/analyses/{analysis_id}/export")
+def export_report(analysis_id: str) -> Response:
+    """Markdown report as a file download. The browser's print-to-PDF covers PDF output,
+    which avoids shipping a rendering engine for a rarely-used format."""
+    analysis = _load_completed(analysis_id)
+    document = repository.get_document(analysis.document_id)
+    filename = document.filename if document else "specification"
+    generated = (analysis.completed_at or analysis.created_at).strftime("%Y-%m-%d %H:%M UTC")
+    markdown = build_markdown_report(analysis.result, filename, generated)
+
+    safe_stem = re.sub(r"[^A-Za-z0-9_.-]+", "_", Path(filename).stem)[:60] or "analysis"
+    return Response(
+        content=markdown,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="specguard_{safe_stem}.md"'
         },
     )
 

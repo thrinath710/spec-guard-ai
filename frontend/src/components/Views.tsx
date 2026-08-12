@@ -8,8 +8,10 @@ import {
   FlaskConical,
   GitCompareArrows,
   History,
+  Download,
   Lightbulb,
   Loader2,
+  RotateCw,
   Search,
   ShieldHalf,
   Trash2,
@@ -27,6 +29,7 @@ import {
 } from "@/lib/api";
 import {
   Badge,
+  Button,
   DistributionBar,
   EmptyState,
   MetricTile,
@@ -102,10 +105,18 @@ export function DashboardView({
   result,
   filename,
   onOpen,
+  onExport,
+  onRerun,
+  exporting,
+  rerunning,
 }: {
   result: AnalysisResult;
   filename: string;
   onOpen: (view: "requirements" | "security" | "tests") => void;
+  onExport?: () => void;
+  onRerun?: () => void;
+  exporting?: boolean;
+  rerunning?: boolean;
 }) {
   const issues = result.quality.flatMap((q) => q.issues);
   const securityBySeverity = SEVERITY_ORDER.map((sev) => ({
@@ -125,14 +136,38 @@ export function DashboardView({
 
   return (
     <div className="sg-fade-in space-y-5">
-      <div className="border-b border-line pb-4">
-        <h1 className="truncate text-[22px] font-semibold tracking-tight text-ink">
-          {filename}
-        </h1>
-        <p className="mt-1 font-mono text-[12px] text-ink-muted">
-          {result.requirements.length} requirements analyzed ·{" "}
-          <span className="uppercase">{result.score.risk_level} risk</span>
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
+        <div className="min-w-0">
+          <h1 className="truncate text-[22px] font-semibold tracking-tight text-ink">
+            {filename}
+          </h1>
+          <p className="mt-1 font-mono text-[12px] text-ink-muted">
+            {result.requirements.length} requirements analyzed ·{" "}
+            <span className="uppercase">{result.score.risk_level} risk</span>
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2 print:hidden">
+          {onRerun ? (
+            <Button variant="secondary" onClick={onRerun} disabled={rerunning}>
+              {rerunning ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <RotateCw size={15} />
+              )}
+              Re-run
+            </Button>
+          ) : null}
+          {onExport ? (
+            <Button variant="secondary" onClick={onExport} disabled={exporting}>
+              {exporting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Download size={15} />
+              )}
+              Export report
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {result.degraded ? (
@@ -826,12 +861,14 @@ export function HistoryView({
   onOpen,
   onRefresh,
   onDelete,
+  onRerun,
 }: {
   analyses: AnalysisSummary[];
   loading: boolean;
   onOpen: (id: string) => void;
   onRefresh: () => void;
   onDelete: (id: string) => Promise<void>;
+  onRerun: (documentId: string) => Promise<void>;
 }) {
   // Two-step delete: the first click arms the row, the second confirms. Avoids a modal for
   // an action that is easy to trigger by accident in a dense table.
@@ -966,6 +1003,17 @@ export function HistoryView({
                             <Trash2 size={15} />
                           </button>
                         )}
+                        {confirmingId !== item.id ? (
+                          <button
+                            type="button"
+                            title="Run this document again"
+                            aria-label="Run this document again"
+                            onClick={() => void onRerun(item.document_id)}
+                            className="rounded-DEFAULT p-1.5 text-ink-faint transition-colors hover:bg-accent/10 hover:text-accent"
+                          >
+                            <RotateCw size={15} />
+                          </button>
+                        ) : null}
                         {done && confirmingId !== item.id ? (
                           <ChevronRight size={15} className="text-ink-faint" />
                         ) : null}

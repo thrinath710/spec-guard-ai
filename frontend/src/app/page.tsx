@@ -29,10 +29,13 @@ export default function Home() {
 
   const [filename, setFilename] = useState("");
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  // Kept so the dashboard can re-run the same document without re-uploading it.
+  const [documentId, setDocumentId] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusData | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +47,14 @@ export default function Home() {
 
   const running =
     status?.status === "processing" || status?.status === "queued";
+
+  /** Keeps ?analysis=<id> in sync so a result can be linked, bookmarked and reloaded. */
+  const syncUrl = useCallback((id: string | null) => {
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set("analysis", id);
+    else url.searchParams.delete("analysis");
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
@@ -77,6 +88,7 @@ export default function Home() {
         if (next.status === "completed") {
           setResult(await api.results(id));
           setView("dashboard");
+          syncUrl(id);
           void loadHistory();
           return;
         }
@@ -89,7 +101,7 @@ export default function Home() {
         "Analysis timed out. The backend may still be working — check the Analyses tab.",
       );
     },
-    [loadHistory],
+    [loadHistory, syncUrl],
   );
 
   async function startAnalysis(file: File) {
@@ -100,6 +112,7 @@ export default function Home() {
     try {
       const upload = await api.uploadDocument(file);
       setFilename(upload.filename);
+      setDocumentId(upload.document_id);
       const started = await api.startAnalysis(upload.document_id);
       setAnalysisId(started.analysis_id);
       activeRun.current = started.analysis_id;
@@ -142,32 +155,86 @@ export default function Home() {
     [analysisId],
   );
 
-  async function openAnalysis(id: string) {
-    setBusy(true);
-    setError(null);
+  const openAnalysis = useCallback(
+    async (id: string) => {
+      setBusy(true);
+      setError(null);
+      try {
+        activeRun.current = null;
+        const [loaded, summary] = await Promise.all([
+          api.results(id),
+          api.listAnalyses(),
+        ]);
+        setResult(loaded);
+        setAnalysisId(id);
+        setStatus(null);
+        const match = summary.find((a) => a.id === id);
+        setFilename(match?.filename ?? "Previous analysis");
+        setDocumentId(match?.document_id ?? null);
+        setView("dashboard");
+        syncUrl(id);
+      } catch (caught) {
+        setError(
+          caught instanceof Error ? caught.message : "Could not load analysis.",
+        );
+        syncUrl(null);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [syncUrl],
+  );
+
+  async function exportReport() {
+    if (!analysisId) return;
+    setExporting(true);
     try {
-      activeRun.current = null;
-      const [loaded, summary] = await Promise.all([
-        api.results(id),
-        api.listAnalyses(),
-      ]);
-      setResult(loaded);
-      setAnalysisId(id);
-      setStatus(null);
-      setFilename(
-        summary.find((a) => a.id === id)?.filename ?? "Previous analysis",
-      );
-      setView("dashboard");
+      await api.downloadReport(analysisId, filename || "analysis");
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Could not load analysis.",
-      );
+      setError(caught instanceof Error ? caught.message : "Export failed.");
     } finally {
-      setBusy(false);
+      setExporting(false);
     }
   }
 
-  if (!booted) return <Splash onDone={() => setBooted(true)} />;
+  /** Re-analyzes an already-uploaded document without asking for the file again. */
+  const rerun = useCallback(
+    async (targetDocumentId: string) => {
+      setBusy(true);
+      setError(null);
+      setResult(null);
+      setStatus(null);
+      try {
+        const started = await api.startAnalysis(targetDocumentId);
+        setAnalysisId(started.analysis_id);
+        setDocumentId(targetDocumentId);
+        setFilename(started.filename);
+        activeRun.current = started.analysis_id;
+        setView("new");
+        syncUrl(started.analysis_id);
+        await poll(started.analysis_id);
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Could not re-run.");
+        activeRun.current = null;
+        setStatus(null);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [poll, syncUrl],
+  );
+
+  if (!booted) {
+    return (
+      <Splash
+        onDone={() => {
+          setBooted(true);
+          const shared = new URLSearchParams(window.location.search).get("analysis");
+          if (shared) void openAnalysis(shared);
+        }}
+      />
+    );
+  }
 
   const breadcrumb = running
     ? `Analysis / ${filename || "Running"}`
@@ -206,6 +273,10 @@ export default function Home() {
             result={result}
             filename={filename}
             onOpen={(next) => navigate(next)}
+            onExport={exportReport}
+            onRerun={documentId ? () => void rerun(documentId) : undefined}
+            exporting={exporting}
+            rerunning={busy}
           />
         ) : (
           <UploadView onStart={startAnalysis} busy={busy} error={error} />
@@ -225,6 +296,7 @@ export default function Home() {
           onOpen={openAnalysis}
           onRefresh={loadHistory}
           onDelete={deleteAnalysis}
+          onRerun={rerun}
         />
       ) : null}
     </Shell>
