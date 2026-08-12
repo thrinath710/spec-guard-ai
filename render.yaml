@@ -4,7 +4,7 @@ services:
   - type: web
     name: specguard-api
     runtime: python
-    plan: starter
+    plan: free
     region: singapore
     rootDir: .
     buildCommand: pip install -r backend/requirements.txt
@@ -32,8 +32,8 @@ services:
       # Ollama is a local-only tier; the hosted deployment relies on Gemini then Groq.
       - key: LLM_PROVIDER_ORDER
         value: '["gemini","groq"]'
-      # The ONNX embedding model needs more RAM than the free plan allows. Leave "true" on
-      # the starter plan or above; set "false" to run analysis without pgvector storage.
+      # 384-dimensional model: ~390MB resident, which fits the free plan's 512MB where the
+      # 768-dim default (~740MB) does not. Requires migration 0005 to match the vector column.
       - key: EMBEDDINGS_ENABLED
         value: "true"
       - key: EMBEDDING_MODEL
@@ -45,7 +45,7 @@ services:
   - type: web
     name: specguard-web
     runtime: node
-    plan: starter
+    plan: free
     region: singapore
     rootDir: frontend
     buildCommand: npm ci && npm run build

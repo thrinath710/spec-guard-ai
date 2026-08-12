@@ -22,7 +22,7 @@ Run each file in `supabase/migrations/` **in order** in the Supabase SQL Editor:
 | `0002_improved_requirements_remaining_questions.sql` | Yes | Open questions on rewrites |
 | `0003_requirement_scores_columns.sql` | Yes | Per-requirement scores |
 | `0004_analysis_progress.sql` | Recommended | Persists pipeline stages and execution log |
-| `0005_embedding_dimension_384.sql` | Only if using a 384-dim model | See Memory below |
+| `0005_embedding_dimension_384.sql` | **Yes** | Matches the vector column to the 384-dim model this project is configured for |
 | `0006_documents_extracted_text.sql` | Recommended | Lets re-run work after the host recycles |
 
 The app degrades gracefully without 0004 and 0006 — it will not crash, it simply loses the
@@ -59,13 +59,17 @@ after changing it**.
 
 ## Memory
 
-The ONNX embedding model is the deciding factor for which plan works:
+The ONNX embedding model decides which plan is viable. This project is configured for
+**`BAAI/bge-small-en-v1.5`** (384-dim, ~310 MB measured), which fits Render's free 512 MB tier.
 
 | Setup | Peak RSS | Plan |
 | --- | --- | --- |
-| `BAAI/bge-base-en-v1.5` (768-dim, default) | ~740 MB | Starter or above |
-| `BAAI/bge-small-en-v1.5` (384-dim) | ~390 MB | Free tier, needs migration `0005` |
-| `EMBEDDINGS_ENABLED=false` | minimal | Free tier; analysis is unaffected, only pgvector storage and retrieval are skipped |
+| `BAAI/bge-small-en-v1.5` (384-dim) — **current** | ~310 MB | Free |
+| `BAAI/bge-base-en-v1.5` (768-dim) | ~740 MB | Starter or above; also revert migration `0005` |
+| `EMBEDDINGS_ENABLED=false` | minimal | Free; analysis unaffected, only pgvector storage and retrieval are skipped |
+
+The embedding model and the `document_chunks.embedding` column must agree on dimensions.
+Changing one without the other makes every vector insert fail.
 
 ## Notes
 

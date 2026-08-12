@@ -67,7 +67,7 @@ class Settings(BaseSettings):
 
     # Groq exposes no embeddings endpoint, so RAG vectors are produced in-process by
     # fastembed. 768 dimensions to match the pgvector column in the Supabase schema.
-    embedding_model: str = "BAAI/bge-base-en-v1.5"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
     # The ONNX embedding model needs ~740MB resident (bge-base) or ~390MB (bge-small).
     # Turn off on memory-constrained hosts: analysis still runs in full, only the pgvector
     # storage and retrieval step is skipped.
