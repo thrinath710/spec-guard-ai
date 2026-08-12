@@ -30,6 +30,7 @@ def _document_to_row(document: DocumentRecord) -> dict:
         "file_size": document.file_size,
         "storage_path": document.storage_path,
         "status": document.status.value,
+        "extracted_text": document.extracted_text or None,
     }
 
 
@@ -41,7 +42,7 @@ def _row_to_document(row: dict) -> DocumentRecord:
         file_size=row["file_size"],
         storage_path=row["storage_path"],
         status=DocumentStatus(row["status"]),
-        extracted_text="",
+        extracted_text=row.get("extracted_text") or "",
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
@@ -51,6 +52,8 @@ class SupabaseRepository:
     # Set to False the first time the database rejects the pipeline-progress columns, so an
     # un-migrated database degrades to basic status tracking instead of failing every write.
     _progress_columns_available = True
+    # Set to False if the documents table predates the extracted-text column.
+    _document_text_available = True
 
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
@@ -65,7 +68,17 @@ class SupabaseRepository:
     # ---- documents ----
 
     def add_document(self, document: DocumentRecord) -> DocumentRecord:
-        self.client.table("documents").insert(_document_to_row(document)).execute()
+        row = _document_to_row(document)
+        if not type(self)._document_text_available:
+            row.pop("extracted_text", None)
+        try:
+            self.client.table("documents").insert(row).execute()
+        except Exception as exc:  # noqa: BLE001
+            if not self._is_missing_column(exc):
+                raise
+            type(self)._document_text_available = False
+            row.pop("extracted_text", None)
+            self.client.table("documents").insert(row).execute()
         return document
 
     def get_document(self, document_id: str) -> DocumentRecord | None:
@@ -78,6 +91,8 @@ class SupabaseRepository:
         document.updated_at = utc_now()
         row = _document_to_row(document)
         row.pop("id")
+        if not type(self)._document_text_available:
+            row.pop("extracted_text", None)
         self.client.table("documents").update(row).eq("id", document.id).execute()
         return document
 

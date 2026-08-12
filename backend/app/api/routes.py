@@ -394,7 +394,17 @@ def _execute_analysis(analysis_id: str) -> None:
         repository.update_analysis(analysis)
 
         tracker.start("initialization", f"Loading {document.filename}.")
-        extracted_text = processor.extract_text(Path(document.storage_path), document.file_type)
+        # Prefer the stored text: uploads sit on an ephemeral disk, so on a re-run the
+        # original file may be gone even though the document record remains.
+        extracted_text = document.extracted_text or ""
+        if not extracted_text.strip():
+            source = Path(document.storage_path)
+            if not source.exists():
+                raise FileNotFoundError(
+                    "The uploaded file is no longer available on this server and no extracted "
+                    "text was stored. Upload the document again to re-analyze it."
+                )
+            extracted_text = processor.extract_text(source, document.file_type)
         chunks = processor.chunk_text(extracted_text)
         tracker.complete(
             "initialization",

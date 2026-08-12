@@ -1,26 +1,26 @@
+# Runtime dependencies only. Anything not imported by backend/app is deliberately absent:
+# unused wheels (psycopg, sqlalchemy) meaningfully slow cold builds on small hosts.
 fastapi
 uvicorn[standard]
 python-multipart
 pydantic
 pydantic-settings
 python-dotenv
-sqlalchemy
-psycopg[binary]
+
+# Database (Supabase REST client; no direct Postgres driver needed)
 supabase
-pgvector
-langchain
-langchain-core
-langchain-community
-langchain-groq
+
+# AI workflow + providers
 langgraph
-langchain-text-splitters
+langchain-core
+langchain-groq
+
+# Embeddings (pulls onnxruntime and numpy transitively)
+fastembed
+
+# Document parsing
 pypdf
 python-docx
-markdown
-beautifulsoup4
-fastembed
-numpy
+
+# HTTP client used for the Gemini and Ollama providers
 httpx
-pytest
-pytest-asyncio
-ruff
