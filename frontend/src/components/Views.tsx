@@ -9,6 +9,7 @@ import {
   GitCompareArrows,
   History,
   Download,
+  FilePlus2,
   Lightbulb,
   Loader2,
   RotateCw,
@@ -107,6 +108,7 @@ export function DashboardView({
   onOpen,
   onExport,
   onRerun,
+  onNewAnalysis,
   exporting,
   rerunning,
 }: {
@@ -115,6 +117,7 @@ export function DashboardView({
   onOpen: (view: "requirements" | "security" | "tests") => void;
   onExport?: () => void;
   onRerun?: () => void;
+  onNewAnalysis?: () => void;
   exporting?: boolean;
   rerunning?: boolean;
 }) {
@@ -146,7 +149,13 @@ export function DashboardView({
             <span className="uppercase">{result.score.risk_level} risk</span>
           </p>
         </div>
-        <div className="flex shrink-0 gap-2 print:hidden">
+        <div className="flex shrink-0 flex-wrap gap-2 print:hidden">
+          {onNewAnalysis ? (
+            <Button variant="secondary" onClick={onNewAnalysis}>
+              <FilePlus2 size={15} />
+              New analysis
+            </Button>
+          ) : null}
           {onRerun ? (
             <Button variant="secondary" onClick={onRerun} disabled={rerunning}>
               {rerunning ? (

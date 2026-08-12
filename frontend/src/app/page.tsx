@@ -9,7 +9,7 @@ import {
   StatusData,
 } from "@/lib/api";
 import { LiveAnalysis } from "@/components/LiveAnalysis";
-import { MobileNav, Shell, ViewKey } from "@/components/Shell";
+import { Shell, ViewKey } from "@/components/Shell";
 import { Splash } from "@/components/Splash";
 import { UploadView } from "@/components/UploadView";
 import {
@@ -25,7 +25,7 @@ const POLL_TIMEOUT_MS = 6 * 60 * 1000;
 
 export default function Home() {
   const [booted, setBooted] = useState(false);
-  const [view, setView] = useState<ViewKey>("new");
+  const [view, setView] = useState<ViewKey>("dashboard");
 
   const [filename, setFilename] = useState("");
   const [analysisId, setAnalysisId] = useState<string | null>(null);
@@ -116,7 +116,7 @@ export default function Home() {
       const started = await api.startAnalysis(upload.document_id);
       setAnalysisId(started.analysis_id);
       activeRun.current = started.analysis_id;
-      setView("new");
+      setView("dashboard");
       await poll(started.analysis_id);
     } catch (caught) {
       setError(
@@ -210,7 +210,7 @@ export default function Home() {
         setDocumentId(targetDocumentId);
         setFilename(started.filename);
         activeRun.current = started.analysis_id;
-        setView("new");
+        setView("dashboard");
         syncUrl(started.analysis_id);
         await poll(started.analysis_id);
       } catch (caught) {
@@ -237,12 +237,12 @@ export default function Home() {
   }
 
   const breadcrumb = running
-    ? `Analysis / ${filename || "Running"}`
-    : result
-      ? `Analysis / ${filename}`
-      : view === "history"
-        ? "Analyses"
-        : "New Analysis";
+    ? `Dashboard / ${filename || "Running"}`
+    : view === "history"
+      ? "Analyses"
+      : result
+        ? `Dashboard / ${filename}`
+        : "Dashboard / New analysis";
 
   return (
     <Shell
@@ -252,9 +252,7 @@ export default function Home() {
       hasResults={!!result}
       running={running}
     >
-      <MobileNav view={view} onNavigate={navigate} hasResults={!!result} />
-
-      {view === "new" ? (
+      {view === "dashboard" ? (
         running && status ? (
           <LiveAnalysis
             filename={filename}
@@ -262,19 +260,18 @@ export default function Home() {
             onCancel={cancelAnalysis}
             cancelling={cancelling}
           />
-        ) : (
-          <UploadView onStart={startAnalysis} busy={busy} error={error} />
-        )
-      ) : null}
-
-      {view === "dashboard" ? (
-        result ? (
+        ) : result ? (
           <DashboardView
             result={result}
             filename={filename}
             onOpen={(next) => navigate(next)}
             onExport={exportReport}
             onRerun={documentId ? () => void rerun(documentId) : undefined}
+            onNewAnalysis={() => {
+              setResult(null);
+              setStatus(null);
+              syncUrl(null);
+            }}
             exporting={exporting}
             rerunning={busy}
           />
