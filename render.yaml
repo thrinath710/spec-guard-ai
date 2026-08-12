@@ -1,0 +1,58 @@
+# Render blueprint. Secrets (API keys) are deliberately marked sync:false so they are entered
+# in the Render dashboard rather than committed to the repository.
+services:
+  - type: web
+    name: specguard-api
+    runtime: python
+    plan: starter
+    region: singapore
+    rootDir: .
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.13"
+      - key: USE_LLM
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-flash-lite-latest
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GROQ_FALLBACK_MODEL
+        value: llama-3.1-8b-instant
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      # Ollama is a local-only tier; the hosted deployment relies on Gemini then Groq.
+      - key: LLM_PROVIDER_ORDER
+        value: '["gemini","groq"]'
+      # The ONNX embedding model needs more RAM than the free plan allows. Leave "true" on
+      # the starter plan or above; set "false" to run analysis without pgvector storage.
+      - key: EMBEDDINGS_ENABLED
+        value: "true"
+      - key: EMBEDDING_MODEL
+        value: BAAI/bge-small-en-v1.5
+      # Set to the deployed frontend origin once it exists.
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: specguard-web
+    runtime: node
+    plan: starter
+    region: singapore
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Must point at the deployed API, including the /api/v1 prefix.
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false

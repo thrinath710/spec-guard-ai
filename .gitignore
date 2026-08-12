@@ -1,0 +1,18 @@
+.venv/
+data/
+frontend/node_modules/
+frontend/.next/
+.env
+frontend/.env.local
+__pycache__/
+.pytest_cache/
+# secrets / local state
+.env.*.local
+*.pem
+# build + caches
+.ruff_cache/
+frontend/out/
+.DS_Store
+.env.local
+node_modules/
+.claude/

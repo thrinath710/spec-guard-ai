@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* Obsidian Precision — dark-first palette for a high-density developer tool.
+   Surfaces are layered rather than shadowed; borders are low-opacity white. */
+@theme {
+  --color-base: #0b0e14;
+  --color-surface: #0e141a;
+  --color-panel: #12141c;
+  --color-panel-hi: #1a1d27;
+  --color-panel-hier: #252a32;
+  --color-line: #20262f;
+  --color-line-soft: #171d25;
+
+  --color-ink: #dee3ec;
+  --color-ink-dim: #c1c6d7;
+  --color-ink-muted: #8b90a0;
+  --color-ink-faint: #5f6674;
+
+  --color-accent: #4b8eff;
+  --color-accent-soft: #adc6ff;
+  --color-accent-deep: #002e69;
+
+  --color-critical: #ff8a80;
+  --color-high: #ffa657;
+  --color-medium: #ffd479;
+  --color-low: #7ee2b8;
+  --color-ok: #4ade80;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-base);
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--color-base);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Scrollbars tuned to the dark surfaces so they don't punch holes in the layout. */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #262d38;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #333c4a;
+}
+
+@keyframes sg-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(75, 142, 255, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(75, 142, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(75, 142, 255, 0);
+  }
+}
+.sg-pulse {
+  animation: sg-pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes sg-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.sg-fade-up {
+  animation: sg-fade-up 0.35s ease both;
+}
+
+@keyframes sg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.sg-fade-in {
+  animation: sg-fade-in 0.4s ease both;
+}
+
+@keyframes sg-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(320%);
+  }
+}
+.sg-sweep {
+  animation: sg-sweep 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-pulse,
+  .sg-fade-up,
+  .sg-fade-in,
+  .sg-sweep {
+    animation: none;
+  }
+}

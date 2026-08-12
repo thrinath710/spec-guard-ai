@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SpecGuard AI - Live Analysis Progress</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#adc6ff",
+                      "inverse-surface": "#dee3ec",
+                      "surface-container-lowest": "#090f15",
+                      "surface-container-highest": "#30353d",
+                      "outline": "#8b90a0",
+                      "on-background": "#dee3ec",
+                      "surface-container": "#1b2027",
+                      "inverse-primary": "#005bc1",
+                      "secondary-fixed": "#e1e1ed",
+                      "on-tertiary-container": "#262934",
+                      "on-secondary": "#2e3039",
+                      "tertiary": "#c4c6d3",
+                      "primary-container": "#4b8eff",
+                      "surface-container-high": "#252a32",
+                      "tertiary-fixed": "#e0e2f0",
+                      "on-tertiary-fixed": "#181b25",
+                      "surface-dim": "#0e141a",
+                      "primary-fixed": "#d8e2ff",
+                      "primary-fixed-dim": "#adc6ff",
+                      "error-container": "#93000a",
+                      "error": "#ffb4ab",
+                      "on-error": "#690005",
+                      "on-surface": "#dee3ec",
+                      "tertiary-container": "#8e909d",
+                      "on-primary": "#002e69",
+                      "on-secondary-fixed": "#191b23",
+                      "on-tertiary": "#2d303b",
+                      "on-tertiary-fixed-variant": "#444652",
+                      "inverse-on-surface": "#2c3138",
+                      "on-secondary-fixed-variant": "#454650",
+                      "on-primary-fixed": "#001a41",
+                      "secondary-container": "#454650",
+                      "secondary-fixed-dim": "#c5c6d1",
+                      "on-primary-fixed-variant": "#004493",
+                      "on-error-container": "#ffdad6",
+                      "on-secondary-container": "#b4b4bf",
+                      "surface-tint": "#adc6ff",
+                      "background": "#0e141a",
+                      "surface-variant": "#30353d",
+                      "on-surface-variant": "#c1c6d7",
+                      "outline-variant": "#414755",
+                      "surface-bright": "#343a41",
+                      "surface": "#0e141a",
+                      "surface-container-low": "#171c23",
+                      "on-primary-container": "#00285c",
+                      "tertiary-fixed-dim": "#c4c6d3",
+                      "secondary": "#c5c6d1"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "container-max": "1440px",
+                      "xs": "4px",
+                      "xl": "48px",
+                      "gutter": "20px",
+                      "unit": "4px",
+                      "md": "16px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "label-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "code-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #dee3ec; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .pulse-processing {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(75, 142, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(75, 142, 255, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(75, 142, 255, 0); }
+        }
+        
+        .glass-panel {
+            background-color: #12141c;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .log-console::-webkit-scrollbar {
+            width: 8px;
+        }
+        .log-console::-webkit-scrollbar-track {
+            background: #0b0e14; 
+        }
+        .log-console::-webkit-scrollbar-thumb {
+            background: #30353d; 
+            border-radius: 4px;
+        }
+        
+        .progress-circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full py-lg px-md bg-surface border-r border-outline-variant fixed left-0 top-0 h-screen w-64 z-40">
+<div class="mb-xl px-sm">
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">SpecGuard AI</h1>
+<p class="font-label-mono text-label-mono text-outline mt-xs">Technical Analysis v2.4</p>
+</div>
+<div class="flex-1 space-y-sm">
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-secondary-container/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT bg-primary-container text-on-primary-container font-semibold cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-body-md text-body-md">New Analysis</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-secondary-container/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">history</span>
+<span class="font-body-md text-body-md">Analyses</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-secondary-container/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">description</span>
+<span class="font-body-md text-body-md">Requirements</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-secondary-container/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">security</span>
+<span class="font-body-md text-body-md">Security</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-secondary-container/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">fact_check</span>
+<span class="font-body-md text-body-md">Test Cases</span>
+</a>
+</div>
+<div class="mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-secondary-container/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="hidden md:flex items-center justify-between px-lg z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm fixed top-0 right-0 w-[calc(100%-16rem)] h-16">
+<div class="flex items-center gap-md">
+<span class="font-body-md text-body-md text-on-surface-variant">Analysis / API Gateway Auth Flow</span>
+</div>
+<div class="flex items-center gap-lg">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline flex items-center justify-center overflow-hidden relative cursor-pointer">
+<span class="material-symbols-outlined text-outline text-sm">person</span>
+<div class="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-surface"></div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 mt-0 md:mt-16 p-lg overflow-y-auto w-full relative">
+<div class="max-w-container-max mx-auto space-y-lg h-full flex flex-col">
+<!-- Header Section -->
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">API Gateway Auth Flow</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Analysis ID: 89f2-4bc1-a299</p>
+</div>
+<div class="flex items-center gap-md">
+<button class="px-md py-sm bg-surface-container border border-outline-variant text-on-surface font-body-md text-body-md rounded-DEFAULT hover:bg-surface-container-high transition-colors">
+                        Pause
+                    </button>
+<button class="px-md py-sm bg-error/10 border border-error/20 text-error font-body-md text-body-md rounded-DEFAULT hover:bg-error/20 transition-colors">
+                        Abort Analysis
+                    </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg flex-1">
+<!-- Left Column: Overall Progress & Log -->
+<div class="flex flex-col gap-lg col-span-1">
+<!-- Progress Card -->
+<div class="glass-panel rounded-lg p-lg flex flex-col items-center justify-center relative">
+<h3 class="font-label-mono text-label-mono text-outline absolute top-lg left-lg uppercase tracking-wider">Overall Progress</h3>
+<div class="relative w-48 h-48 mt-xl">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<!-- Background Circle -->
+<circle cx="50" cy="50" fill="none" r="45" stroke="#1b2027" stroke-width="8"></circle>
+<!-- Progress Circle -->
+<circle class="progress-circle" cx="50" cy="50" fill="none" r="45" stroke="#007aff" stroke-dasharray="283" stroke-dashoffset="113.2" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-display-lg text-primary">60%</span>
+<span class="font-label-mono text-label-mono text-outline mt-xs">Running</span>
+</div>
+</div>
+<div class="mt-lg w-full">
+<div class="flex justify-between font-label-mono text-label-mono text-outline mb-xs">
+<span>Elapsed: 02:14</span>
+<span>Est. Remaining: 01:30</span>
+</div>
+</div>
+</div>
+<!-- Live Log Console -->
+<div class="glass-panel rounded-lg flex flex-col flex-1 border border-outline-variant/30 overflow-hidden min-h-[300px]">
+<div class="bg-surface-container px-md py-sm border-b border-outline-variant/30 flex justify-between items-center">
+<span class="font-label-mono text-label-mono text-outline uppercase">Execution Log</span>
+<span class="flex items-center gap-xs text-primary font-label-mono text-[10px]">
+<span class="w-2 h-2 rounded-full bg-primary pulse-processing"></span>
+                                LIVE
+                            </span>
+</div>
+<div class="bg-black/80 p-md flex-1 overflow-y-auto log-console font-code-sm text-code-sm space-y-2" id="logContainer">
+<div class="text-tertiary-fixed-dim">[10:45:01] Initializing Analysis Engine v2.4...</div>
+<div class="text-tertiary-fixed-dim">[10:45:02] Loading specification document ID: 89f2-4bc1-a299...</div>
+<div class="text-primary">[10:45:05] Extracted 45 endpoints.</div>
+<div class="text-tertiary-fixed-dim">[10:45:08] Starting Entity Extraction...</div>
+<div class="text-primary">[10:45:15] Identified 12 primary domain entities.</div>
+<div class="text-tertiary-fixed-dim">[10:45:16] Initiating Vector DB connection...</div>
+<div class="text-tertiary-fixed-dim">[10:45:18] Querying knowledge base for architectural patterns...</div>
+<div class="text-primary">[10:45:25] Retrieved 3 relevant pattern contexts.</div>
+<div class="text-tertiary-fixed-dim">[10:45:26] Beginning Security Analysis...</div>
+<div class="text-on-surface-variant flex items-center gap-xs">
+<span class="animate-pulse">_</span> Scanning for common vulnerabilities (OWASP Top 10)
+                            </div>
+</div>
+</div>
+</div>
+<!-- Right Column: Pipeline Steps -->
+<div class="glass-panel rounded-lg p-lg col-span-2 flex flex-col">
+<h3 class="font-label-mono text-label-mono text-outline uppercase tracking-wider mb-lg">Analysis Pipeline</h3>
+<div class="flex-1 relative">
+<!-- Connecting Line -->
+<div class="absolute left-[27px] top-4 bottom-4 w-0.5 bg-surface-container-highest z-0"></div>
+<div class="absolute left-[27px] top-4 h-[60%] w-0.5 bg-primary z-0 transition-all duration-1000"></div>
+<!-- Steps Container -->
+<div class="relative z-10 space-y-lg">
+<!-- Step 1: Done -->
+<div class="flex items-start gap-md">
+<div class="w-14 h-14 rounded-full bg-surface-container-highest border border-primary/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Initialization</h4>
+<span class="font-label-mono text-label-mono text-outline">100%</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Environment setup and document loading completed.</p>
+</div>
+</div>
+<!-- Step 2: Done -->
+<div class="flex items-start gap-md">
+<div class="w-14 h-14 rounded-full bg-surface-container-highest border border-primary/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">text_snippet</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Extraction</h4>
+<span class="font-label-mono text-label-mono text-outline">100%</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Parsed OpenAPI spec and extracted endpoints.</p>
+</div>
+</div>
+<!-- Step 3: Done -->
+<div class="flex items-start gap-md">
+<div class="w-14 h-14 rounded-full bg-surface-container-highest border border-primary/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">data_object</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Entity Mapping</h4>
+<span class="font-label-mono text-label-mono text-outline">100%</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Identified domain entities and relationships.</p>
+</div>
+</div>
+<!-- Step 4: Done -->
+<div class="flex items-start gap-md">
+<div class="w-14 h-14 rounded-full bg-surface-container-highest border border-primary/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">share</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">RAG Contextualization</h4>
+<span class="font-label-mono text-label-mono text-outline">100%</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Queried vector database for historical patterns.</p>
+</div>
+</div>
+<!-- Step 5: Processing (Current) -->
+<div class="flex items-start gap-md relative">
+<div class="absolute -left-12 top-4">
+<span class="font-label-mono text-label-mono text-primary animate-pulse">Running</span>
+</div>
+<div class="w-14 h-14 rounded-full bg-primary/10 border border-primary flex items-center justify-center shrink-0 pulse-processing">
+<span class="material-symbols-outlined text-primary animate-spin" style="animation-duration: 3s;">sync</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-primary">Security Analysis</h4>
+<span class="font-label-mono text-label-mono text-primary">45%</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-xs">Scanning for common vulnerabilities (OWASP Top 10).</p>
+<div class="mt-md h-1 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[45%]"></div>
+</div>
+</div>
+</div>
+<!-- Step 6: Waiting -->
+<div class="flex items-start gap-md opacity-50">
+<div class="w-14 h-14 rounded-full bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-outline">architecture</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-on-surface-variant">Architecture Review</h4>
+<span class="font-label-mono text-label-mono text-outline">Pending</span>
+</div>
+</div>
+</div>
+<!-- Step 7: Waiting -->
+<div class="flex items-start gap-md opacity-50">
+<div class="w-14 h-14 rounded-full bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-outline">rule</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-on-surface-variant">Compliance Check</h4>
+<span class="font-label-mono text-label-mono text-outline">Pending</span>
+</div>
+</div>
+</div>
+<!-- Step 8: Waiting -->
+<div class="flex items-start gap-md opacity-50">
+<div class="w-14 h-14 rounded-full bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-outline">summarize</span>
+</div>
+<div class="pt-sm flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm text-on-surface-variant">Report Generation</h4>
+<span class="font-label-mono text-label-mono text-outline">Pending</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to auto-scroll log
+        const logContainer = document.getElementById('logContainer');
+        if(logContainer) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    </script>
+</body></html>
