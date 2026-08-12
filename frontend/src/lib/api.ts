@@ -1,6 +1,11 @@
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
+// True when the app was built without NEXT_PUBLIC_API_BASE_URL. On a deployed site that
+// default points at the visitor's own machine, so the failure needs naming explicitly
+// rather than reading as "the backend is down".
+const USING_FALLBACK_BASE = !process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export type ApiEnvelope<T> = {
   success: boolean;
   data?: T;
@@ -198,8 +203,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${API_BASE}${path}`, init);
   } catch {
+    const isDeployed =
+      typeof window !== "undefined" &&
+      !["localhost", "127.0.0.1"].includes(window.location.hostname);
+    if (isDeployed && USING_FALLBACK_BASE) {
+      throw new ApiError(
+        `This site was built without NEXT_PUBLIC_API_BASE_URL, so it is trying to reach ` +
+          `${API_BASE} — your own machine rather than the server. Set that variable on the ` +
+          `web service to the API's URL (ending in /api/v1) and redeploy.`,
+        "CONFIG",
+      );
+    }
     throw new ApiError(
-      "Cannot reach the SpecGuard API. Make sure the backend is running on port 8000.",
+      `Cannot reach the SpecGuard API at ${API_BASE}. ` +
+        (isDeployed
+          ? "The API may be asleep or restarting — wait ~30s and retry."
+          : "Start the backend with: uvicorn backend.app.main:app --port 8000"),
       "NETWORK",
     );
   }
