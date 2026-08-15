@@ -156,6 +156,10 @@ class GroqProvider:
             max_retries=0,
             max_tokens=max_tokens,
             timeout=self.settings.llm_timeout_seconds,
+            # Reasoning tokens are drawn from max_tokens, so an unbounded chain of thought
+            # eats the budget the JSON answer needs. Groq keeps reasoning out of `content`,
+            # so the response stays parseable either way.
+            reasoning_effort=self.settings.groq_reasoning_effort,
             model_kwargs={"response_format": {"type": "json_object"}},
         )
 

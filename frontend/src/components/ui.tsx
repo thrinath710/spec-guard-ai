@@ -1,17 +1,21 @@
 "use client";
 
-import { ReactNode } from "react";
+import { CSSProperties, ReactNode } from "react";
 import { severityClasses } from "@/lib/api";
 
 export function Panel({
   children,
   className = "",
+  style,
 }: {
   children: ReactNode;
   className?: string;
+  /** Carries the `--sg-delay` custom property when a panel is part of a stagger. */
+  style?: CSSProperties;
 }) {
   return (
     <section
+      style={style}
       className={`rounded-md border border-line bg-panel/90 ${className}`}
     >
       {children}
@@ -136,7 +140,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-DEFAULT px-3.5 py-2 text-[13px] font-medium transition-colors disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${variants[variant]} ${className}`}
+      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-DEFAULT px-3.5 py-2 text-[13px] font-medium transition-all duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${variants[variant]} ${className}`}
     >
       {children}
     </button>
@@ -148,14 +152,20 @@ export function MetricTile({
   value,
   hint,
   tone = "",
+  delay = 0,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
   tone?: string;
+  /** Position in the tile row, used to stagger the entrance. */
+  delay?: number;
 }) {
   return (
-    <div className="rounded-md border border-line bg-panel px-4 py-3">
+    <div
+      style={{ "--sg-delay": `${delay}s` } as CSSProperties}
+      className="sg-rise sg-lift sg-shimmer relative overflow-hidden rounded-md border border-line bg-panel px-4 py-3 hover:border-accent/30"
+    >
       <p className="font-mono text-[11px] uppercase tracking-[0.09em] text-ink-muted">
         {label}
       </p>
@@ -180,11 +190,16 @@ export function DistributionBar({
       <div className="flex h-2 w-full overflow-hidden rounded-full bg-panel-hi">
         {segments
           .filter((s) => s.value > 0)
-          .map((s) => (
+          .map((s, index) => (
             <div
               key={s.label}
-              className={s.className}
-              style={{ width: `${(s.value / total) * 100}%` }}
+              className={`sg-grow ${s.className}`}
+              style={
+                {
+                  width: `${(s.value / total) * 100}%`,
+                  "--sg-delay": `${0.15 + index * 0.08}s`,
+                } as CSSProperties
+              }
               title={`${s.label}: ${s.value}`}
             />
           ))}
@@ -192,10 +207,11 @@ export function DistributionBar({
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
         {segments
           .filter((s) => s.value > 0)
-          .map((s) => (
+          .map((s, index) => (
             <span
               key={s.label}
-              className="flex items-center gap-1.5 font-mono text-[11px] text-ink-muted"
+              style={{ "--sg-delay": `${0.3 + index * 0.06}s` } as CSSProperties}
+              className="sg-fade-up flex items-center gap-1.5 font-mono text-[11px] text-ink-muted"
             >
               <span className={`h-2 w-2 rounded-full ${s.className}`} />
               {s.label} {s.value}

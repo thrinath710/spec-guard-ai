@@ -42,7 +42,7 @@ function NavList({
 }) {
   return (
     <div className="space-y-1">
-      {NAV.map((item) => {
+      {NAV.map((item, index) => {
         const disabled = NEEDS_RESULTS.includes(item.key) && !hasResults;
         const active = view === item.key;
         return (
@@ -52,15 +52,28 @@ function NavList({
             disabled={disabled}
             onClick={() => onNavigate(item.key)}
             title={disabled ? "Run an analysis first" : undefined}
-            className={`flex w-full items-center gap-3 rounded-DEFAULT px-3 py-2.5 text-left text-[13.5px] transition-colors ${
+            style={{ "--sg-delay": `${0.05 + index * 0.05}s` } as React.CSSProperties}
+            className={`sg-rise group relative flex w-full items-center gap-3 overflow-hidden rounded-DEFAULT px-3 py-2.5 text-left text-[13.5px] transition-all duration-200 ${
               active
                 ? "bg-accent/15 font-medium text-accent-soft"
                 : disabled
                   ? "cursor-not-allowed text-ink-faint/60"
-                  : "text-ink-dim hover:bg-white/[0.04] hover:text-ink"
+                  : "cursor-pointer text-ink-dim hover:translate-x-0.5 hover:bg-white/[0.05] hover:text-ink"
             }`}
           >
-            <span className={active ? "text-accent" : ""}>{item.icon}</span>
+            {/* Active marker, drawn as a scaling bar so it grows into place */}
+            <span
+              className={`absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-accent transition-transform duration-300 ${
+                active ? "scale-y-100" : "scale-y-0"
+              }`}
+            />
+            <span
+              className={`transition-transform duration-200 ${
+                active ? "text-accent" : ""
+              } ${disabled ? "" : "group-hover:scale-110"}`}
+            >
+              {item.icon}
+            </span>
             {item.label}
           </button>
         );
@@ -71,13 +84,18 @@ function NavList({
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex h-8 w-8 items-center justify-center rounded-DEFAULT border border-accent/30 bg-accent/10">
-        <ShieldCheck className="text-accent" size={17} />
+    <div className="group flex items-center gap-2.5">
+      <div className="relative flex h-8 w-8 items-center justify-center rounded-DEFAULT border border-accent/30 bg-accent/10 transition-transform duration-300 group-hover:scale-105">
+        {/* Halo that only breathes on hover, so the sidebar is calm at rest */}
+        <span className="absolute inset-0 rounded-DEFAULT bg-accent/20 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100" />
+        <ShieldCheck className="relative text-accent" size={17} />
       </div>
       <div>
         <p className="text-[15px] font-semibold leading-tight text-ink">
-          SpecGuard AI
+          SpecGuard{" "}
+          <span className="sg-hue bg-linear-to-r from-accent via-low to-accent bg-clip-text text-transparent">
+            AI
+          </span>
         </p>
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
           Assurance Engine
@@ -110,7 +128,14 @@ export function Shell({
   }
 
   return (
-    <div className="flex min-h-screen bg-base">
+    <div className="relative flex min-h-screen bg-base">
+      {/* Ambient wash. Fixed and non-interactive so it never enters hit-testing
+          or scrolls with the content. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_18%_0%,rgba(75,142,255,0.07),transparent_45%),radial-gradient(circle_at_88%_8%,rgba(126,226,184,0.05),transparent_42%)]"
+      />
+
       {/* Desktop sidebar */}
       <nav className="fixed left-0 top-0 z-40 hidden h-screen w-60 flex-col border-r border-line bg-surface px-3 py-5 md:flex">
         <div className="mb-8 px-2">
@@ -158,7 +183,9 @@ export function Shell({
         </div>
       ) : null}
 
-      <div className="flex min-h-screen w-full flex-col md:pl-60">
+      {/* Positioned above the ambient wash: a fixed z-0 layer paints over
+          non-positioned siblings, which would otherwise tint the panels. */}
+      <div className="relative z-10 flex min-h-screen w-full flex-col md:pl-60">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-surface/85 px-4 backdrop-blur-md md:px-5">
           <button
             type="button"
@@ -180,7 +207,11 @@ export function Shell({
         </header>
 
         <main className="flex-1 px-4 py-5 md:px-5 md:py-6">
-          <div className="mx-auto w-full max-w-[1440px]">{children}</div>
+          {/* Keyed on the view so React remounts on navigation and the entrance
+              animation replays, giving each tab switch a transition. */}
+          <div key={view} className="sg-rise mx-auto w-full max-w-[1440px]">
+            {children}
+          </div>
         </main>
       </div>
     </div>

@@ -22,9 +22,13 @@ services:
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
-        value: llama-3.3-70b-versatile
+        value: openai/gpt-oss-120b
       - key: GROQ_FALLBACK_MODEL
-        value: llama-3.1-8b-instant
+        value: openai/gpt-oss-20b
+      # gpt-oss reasons before answering and charges those tokens to the same
+      # completion budget as the JSON, so keep the chain of thought short.
+      - key: GROQ_REASONING_EFFORT
+        value: low
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY

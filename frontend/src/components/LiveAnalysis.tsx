@@ -57,7 +57,23 @@ function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.6s ease" }}
+          style={{
+            transition: "stroke-dashoffset 0.6s ease",
+            filter: "drop-shadow(0 0 5px rgba(75,142,255,0.6))",
+          }}
+        />
+        {/* Slowly counter-rotating tick ring, so the dial reads as working even
+            while the percentage is between updates. */}
+        <circle
+          className="sg-spin-slow"
+          cx="50"
+          cy="50"
+          r="37"
+          fill="none"
+          stroke="#4b8eff"
+          strokeWidth="1"
+          strokeDasharray="2 8"
+          opacity="0.35"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -73,7 +89,7 @@ function ProgressRing({
   );
 }
 
-function StageRow({ stage }: { stage: StageInfo }) {
+function StageRow({ stage, index }: { stage: StageInfo; index: number }) {
   const isRunning = stage.status === "running";
   const isDone = stage.status === "completed";
   const isFailed = stage.status === "failed";
@@ -89,7 +105,8 @@ function StageRow({ stage }: { stage: StageInfo }) {
 
   return (
     <div
-      className={`relative flex items-start gap-4 ${
+      style={{ "--sg-delay": `${index * 0.07}s` } as React.CSSProperties}
+      className={`sg-slide-left relative flex items-start gap-4 transition-opacity duration-300 ${
         stage.status === "pending" || isSkipped ? "opacity-45" : ""
       }`}
     >
@@ -196,7 +213,9 @@ function LogConsole({ events }: { events: LogEvent[] }) {
           <p className="text-ink-faint">Waiting for engine output…</p>
         ) : (
           events.map((event, index) => (
-            <div key={index} className={toneFor(event.level)}>
+            // Each line fades in as it arrives; no stagger delay, since events
+            // stream in already spaced out in time.
+            <div key={index} className={`sg-fade-up ${toneFor(event.level)}`}>
               <span className="text-ink-faint">
                 [
                 {new Date(event.timestamp).toLocaleTimeString("en-GB", {
@@ -275,8 +294,8 @@ export function LiveAnalysis({
           <div className="relative">
             <div className="absolute bottom-4 left-[21px] top-4 w-px bg-line" />
             <div className="relative space-y-5">
-              {(status.stages ?? []).map((stage) => (
-                <StageRow key={stage.key} stage={stage} />
+              {(status.stages ?? []).map((stage, index) => (
+                <StageRow key={stage.key} stage={stage} index={index} />
               ))}
               {(status.stages ?? []).length === 0 ? (
                 <p className="text-[13px] text-ink-muted">Starting engine…</p>

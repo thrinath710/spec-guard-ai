@@ -195,23 +195,26 @@ export function DashboardView({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <MetricTile label="Requirements" value={result.requirements.length} />
+        <MetricTile label="Requirements" value={result.requirements.length} delay={0} />
         <MetricTile
           label="Quality Issues"
+          delay={0.06}
           value={issues.length}
           tone={issues.length ? "text-medium" : ""}
         />
         <MetricTile
           label="Security"
+          delay={0.12}
           value={result.security_findings.length}
           tone={result.security_findings.length ? "text-critical" : ""}
         />
         <MetricTile
           label="Contradictions"
+          delay={0.18}
           value={result.conflicts.length}
           tone={result.conflicts.length ? "text-high" : ""}
         />
-        <MetricTile label="Test Cases" value={result.test_cases.length} />
+        <MetricTile label="Test Cases" value={result.test_cases.length} delay={0.24} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -262,7 +265,8 @@ export function DashboardView({
           {topConflicts.map((conflict, index) => (
             <div
               key={`${conflict.requirement_id}-${conflict.related_requirement_id}-${index}`}
-              className="flex flex-col gap-2 px-4 py-3.5 sm:flex-row sm:items-start sm:gap-4"
+              style={{ "--sg-delay": `${index * 0.05}s` } as React.CSSProperties}
+              className="sg-fade-up flex flex-col gap-2 px-4 py-3.5 transition-colors hover:bg-white/[0.02] sm:flex-row sm:items-start sm:gap-4"
             >
               <div className="flex shrink-0 items-center gap-1.5">
                 <ReqTag id={conflict.requirement_id} />
@@ -754,7 +758,11 @@ export function SecurityView({ result }: { result: AnalysisResult }) {
         />
         <div className="divide-y divide-line-soft">
           {findings.map((finding, index) => (
-            <div key={index} className="px-4 py-3.5">
+            <div
+              key={index}
+              style={{ "--sg-delay": `${index * 0.05}s` } as React.CSSProperties}
+              className="sg-fade-up px-4 py-3.5 transition-colors hover:bg-white/[0.02]"
+            >
               <div className="flex flex-wrap items-center gap-2">
                 <ReqTag id={finding.requirement_id} />
                 <Badge>{finding.category}</Badge>
@@ -825,8 +833,12 @@ export function TestsView({ result }: { result: AnalysisResult }) {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        {tests.map((test) => (
-          <Panel key={test.id} className="p-4">
+        {tests.map((test, index) => (
+          <Panel
+            key={test.id}
+            style={{ "--sg-delay": `${Math.min(index, 12) * 0.04}s` } as React.CSSProperties}
+            className="sg-rise sg-lift p-4 hover:border-accent/30"
+          >
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[11px] text-accent-soft">
                 {test.id}

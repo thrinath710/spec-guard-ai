@@ -8,6 +8,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { RobotScene } from "./RobotScene";
 import { Button, Panel } from "./ui";
 
 const ACCEPTED = ".pdf,.docx,.txt,.md,.markdown";
@@ -42,18 +43,30 @@ export function UploadView({
   }
 
   return (
-    <div className="sg-fade-in mx-auto max-w-3xl space-y-6 py-4">
+    <div className="mx-auto max-w-3xl space-y-6 py-4">
       <div className="text-center">
-        <h1 className="text-[26px] font-semibold tracking-tight text-ink">
+        {/* The opening cast, reprised at working scale so the landing screen
+            carries the same character as the splash. */}
+        <RobotScene className="pointer-events-none mx-auto -mb-2 w-full max-w-md opacity-90" />
+        <h1
+          className="sg-rise text-[26px] font-semibold tracking-tight text-ink"
+          style={{ "--sg-delay": "0.1s" } as React.CSSProperties}
+        >
           Analyze a requirements document
         </h1>
-        <p className="mx-auto mt-2 max-w-xl text-[14px] leading-relaxed text-ink-muted">
+        <p
+          className="sg-rise mx-auto mt-2 max-w-xl text-[14px] leading-relaxed text-ink-muted"
+          style={{ "--sg-delay": "0.2s" } as React.CSSProperties}
+        >
           SpecGuard extracts individual requirements, then detects ambiguity,
           security gaps and contradictions before development begins.
         </p>
       </div>
 
-      <Panel className="p-6">
+      <Panel
+        className="sg-rise p-6"
+        style={{ "--sg-delay": "0.3s" } as React.CSSProperties}
+      >
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -62,17 +75,34 @@ export function UploadView({
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           onClick={() => inputRef.current?.click()}
-          className={`flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-6 py-12 text-center transition-colors ${
+          className={`group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-dashed px-6 py-12 text-center transition-all duration-300 ${
             dragging
-              ? "border-accent bg-accent/[0.06]"
+              ? "scale-[1.01] border-accent bg-accent/[0.06]"
               : "border-line bg-base hover:border-accent/50 hover:bg-white/[0.02]"
           }`}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-line bg-panel">
+          {/* Ring that expands out of the drop target while a file is over it */}
+          {dragging ? (
+            <span
+              aria-hidden="true"
+              className="sg-ripple pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent"
+            />
+          ) : null}
+
+          <div
+            className={`relative flex h-12 w-12 items-center justify-center rounded-full border bg-panel transition-all duration-300 ${
+              dragging
+                ? "-translate-y-1 border-accent"
+                : "border-line group-hover:-translate-y-0.5 group-hover:border-accent/50"
+            }`}
+          >
             {file ? (
-              <FileText size={22} className="text-accent" />
+              <FileText size={22} className="sg-pop text-accent" />
             ) : (
-              <UploadCloud size={22} className="text-ink-muted" />
+              <UploadCloud
+                size={22}
+                className={`transition-colors ${dragging ? "text-accent" : "text-ink-muted group-hover:text-accent"}`}
+              />
             )}
           </div>
           <p className="mt-3 max-w-full truncate text-[14px] font-medium text-ink">
@@ -117,7 +147,8 @@ export function UploadView({
         {PIPELINE_BLURB.map((text, index) => (
           <div
             key={index}
-            className="rounded-md border border-line bg-panel/60 p-4"
+            style={{ "--sg-delay": `${0.45 + index * 0.09}s` } as React.CSSProperties}
+            className="sg-rise sg-lift sg-shimmer relative overflow-hidden rounded-md border border-line bg-panel/60 p-4 hover:border-accent/30"
           >
             <span className="font-mono text-[11px] text-accent">
               0{index + 1}

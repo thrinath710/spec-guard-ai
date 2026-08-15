@@ -33,9 +33,15 @@ class Settings(BaseSettings):
     ollama_timeout_seconds: float = 300.0
 
     groq_api_key: str | None = None
-    groq_model: str = "llama-3.3-70b-versatile"
+    # Groq decommissioned both Llama tiers on 2026-08-16; these are the replacements it
+    # names for them (llama-3.3-70b-versatile -> gpt-oss-120b, llama-3.1-8b-instant -> 20b).
+    groq_model: str = "openai/gpt-oss-120b"
     # Separate quota from the primary model, used when the primary is exhausted.
-    groq_fallback_model: str = "llama-3.1-8b-instant"
+    groq_fallback_model: str = "openai/gpt-oss-20b"
+    # The gpt-oss models reason before answering and bill those tokens against the same
+    # completion budget as the JSON. Low effort keeps roughly a third of the reasoning
+    # spend of the default, leaving the cap below for the answer itself.
+    groq_reasoning_effort: str = "low"
     llm_timeout_seconds: float = 90.0
     # Groq defaults to a 4096-token completion cap. A whole-document analysis response
     # exceeds that on real specs and gets truncated mid-JSON, which silently drops whichever

@@ -57,6 +57,46 @@ Then on the **web** service set:
 Include the `/api/v1` suffix. Next.js inlines this at build time, so **redeploy the web service
 after changing it**.
 
+## 4. Hosting the frontend on Vercel instead
+
+The Next.js frontend is a better fit for Vercel than for Render's free tier: it is served from
+the CDN, so it never cold-starts the way a sleeping Render web service does.
+
+1. Vercel → **Add New** → **Project** → import the repo.
+2. Set **Root Directory** to `frontend`. This is the only setting that matters — the repo root
+   holds the Python backend, and Vercel will otherwise fail to detect a framework. It cannot be
+   set from a committed file, only in project settings or during import.
+3. Add the environment variable `NEXT_PUBLIC_API_BASE_URL` =
+   `https://specguard-api.onrender.com/api/v1` for **all** environments.
+4. Deploy, then add the resulting origin to the API's `CORS_ORIGINS` on Render, e.g.
+   `["https://specguard-web.onrender.com","https://specguard-ai.vercel.app"]`, and restart the
+   API service.
+
+`NEXT_PUBLIC_*` values are inlined at build time, so changing the variable requires a redeploy
+on Vercel too — not just a restart.
+
+Once Vercel serves the frontend, the `specguard-web` service in `render.yaml` is redundant. It
+is intentionally left in place as a fallback; delete that service in the Render dashboard if you
+want only one frontend.
+
+### The backend has to stay on Render
+
+Do not move the FastAPI service to Vercel. It is not a plan limitation — the API's design is
+incompatible with serverless functions in three separate ways:
+
+- **Work continues after the response.** `POST /analyses` returns immediately and runs the
+  pipeline in a FastAPI `BackgroundTasks` job. A Vercel function is frozen once it returns its
+  response, so the analysis would be killed the moment it was queued.
+- **Progress lives in process memory.** `services/progress.py` keeps active runs in a
+  module-level dict that `GET /analyses/{id}/status` reads. Every serverless invocation is a
+  fresh instance, so polling would hit an instance that has never heard of the run.
+- **Runs outlast the request.** `analysis_deadline_seconds` is 270s and the frontend polls for
+  up to six minutes. Vercel's Hobby ceiling is a hard 300s per invocation.
+
+Making it work on Vercel would mean a real rewrite — an external queue plus durable progress
+state in Supabase rather than in memory. Render runs a persistent process, which is what this
+design assumes.
+
 ## Memory
 
 The ONNX embedding model decides which plan is viable. This project is configured for
@@ -78,6 +118,11 @@ Changing one without the other makes every vector insert fail.
   text so a re-run does not depend on the file surviving a restart.
 - `LLM_PROVIDER_ORDER` is `["gemini","groq"]` in the deployed config: Ollama is a local-only
   tier and there is no daemon on the host.
+- Groq decommissioned `llama-3.3-70b-versatile` and `llama-3.1-8b-instant` on 2026-08-16. The
+  Groq tier now runs `openai/gpt-oss-120b` with `openai/gpt-oss-20b` as its fallback, the
+  replacements Groq names for each. These are reasoning models that bill their reasoning against
+  the same completion budget as the answer, so `GROQ_REASONING_EFFORT` is set to `low` — raising
+  it eats into the tokens the JSON response needs and truncates long analyses.
 
 ## Verifying a deployment
 
