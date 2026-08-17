@@ -50,12 +50,15 @@ Secrets to enter when prompted (they are marked `sync: false` so they stay out o
 - `SUPABASE_KEY` — the **service_role** key, never the publishable/anon key
 - `CORS_ORIGINS` — set after the web URL exists, e.g. `["https://specguard-web.onrender.com"]`
 
-Then on the **web** service set:
+`NEXT_PUBLIC_API_BASE_URL` is pinned in `render.yaml`, so the web service picks it up on its own.
 
-- `NEXT_PUBLIC_API_BASE_URL` = `https://specguard-api.onrender.com/api/v1`
+Take the hostname from the API service's page in the dashboard rather than assuming it. Render
+subdomains are globally unique and `specguard-api` is already taken by an unrelated service, so
+this blueprint lands on a suffixed name — currently `specguard-api-ngrt.onrender.com`. Pointing
+the frontend at the unsuffixed host silently talks to a stranger's server that answers 200.
 
 Include the `/api/v1` suffix. Next.js inlines this at build time, so **redeploy the web service
-after changing it**.
+after changing it** — a restart is not enough.
 
 ## 4. Hosting the frontend on Vercel instead
 
@@ -67,10 +70,13 @@ the CDN, so it never cold-starts the way a sleeping Render web service does.
    holds the Python backend, and Vercel will otherwise fail to detect a framework. It cannot be
    set from a committed file, only in project settings or during import.
 3. Add the environment variable `NEXT_PUBLIC_API_BASE_URL` =
-   `https://specguard-api.onrender.com/api/v1` for **all** environments.
+   `https://specguard-api-ngrt.onrender.com/api/v1` for **all** environments. Vercel has no
+   equivalent of the blueprint, so this one is manual — miss it and the build bakes in the
+   `http://localhost:8000/api/v1` fallback, which resolves to the *visitor's* machine.
 4. Deploy, then add the resulting origin to the API's `CORS_ORIGINS` on Render, e.g.
-   `["https://specguard-web.onrender.com","https://specguard-ai.vercel.app"]`, and restart the
-   API service.
+   `["https://specguard-web.onrender.com","https://spec-guard-ai.vercel.app"]`, and restart the
+   API service. Copy that origin from Vercel too: `specguard-ai.vercel.app` is someone else's
+   project; this one deploys to the hyphenated `spec-guard-ai.vercel.app`.
 
 `NEXT_PUBLIC_*` values are inlined at build time, so changing the variable requires a redeploy
 on Vercel too — not just a restart.
@@ -134,3 +140,31 @@ curl https://<api-host>/api/v1/analyses            # [] on a fresh database
 Then open the web URL, upload a requirements document, and confirm the pipeline advances
 through all six stages. If the results carry a "Partial AI analysis" banner, the AI providers
 were unreachable or out of quota — check the API service logs for the provider that failed.
+
+To confirm a frontend build picked up the API URL, grep the served bundle for it — the value is
+compiled in, so this reports what the deployed build will actually call:
+
+```bash
+curl -s https://<web-host>/ | grep -oE '/_next/static/chunks/[^"]+\.js' | sort -u \
+  | while read -r c; do curl -s "https://<web-host>$c"; done \
+  | grep -oE 'https?://[a-zA-Z0-9._-]+(:[0-9]+)?/api/v1' | sort -u
+```
+
+Empty output, or `http://localhost:8000/api/v1`, means the build ran without
+`NEXT_PUBLIC_API_BASE_URL`. `next.config.ts` fails hosted builds in that state, so this should
+only appear on a build that predates that guard.
+
+Check CORS separately — a correct URL still fails in the browser if the origin is not allowed:
+
+```bash
+curl -si -H "Origin: https://<web-host>" https://<api-host>/api/v1/analyses \
+  | grep -i access-control-allow-origin      # missing header = add the origin to CORS_ORIGINS
+```
+
+### "Built without NEXT_PUBLIC_API_BASE_URL" in the browser
+
+The build was compiled without the variable; changing it in a dashboard does not retroactively
+alter builds that already exist. On Vercel the usual cause is environment scoping — the value is
+set for Production while the URL being tested is a Preview deployment (any `<project>-<hash>`
+URL). Tick Production, Preview and Development, redeploy with the build cache off, then
+hard-reload, since the stale chunk is cached aggressively.

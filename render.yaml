@@ -57,6 +57,11 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
-      # Must point at the deployed API, including the /api/v1 prefix.
+      # Must point at the deployed API, including the /api/v1 prefix. Pinned rather than
+      # sync:false because it is a public URL, not a secret, and Next.js inlines it at build
+      # time: when it is missing the build silently bakes in the http://localhost:8000/api/v1
+      # fallback, which resolves to the visitor's own machine instead of failing the deploy.
+      # The -ngrt suffix is Render's — the bare specguard-api.onrender.com belongs to an
+      # unrelated service, so do not "correct" this hostname by shortening it.
       - key: NEXT_PUBLIC_API_BASE_URL
-        sync: false
+        value: https://specguard-api-ngrt.onrender.com/api/v1
