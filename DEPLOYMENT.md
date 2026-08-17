@@ -73,6 +73,11 @@ the CDN, so it never cold-starts the way a sleeping Render web service does.
    Production and Preview alike with nothing to set in the dashboard. A value set in project
    settings takes precedence over the file, so if the two ever disagree, the dashboard wins —
    delete it there rather than editing both.
+
+   `build.env` is marked deprecated in Vercel's schema. It still works, and the build guard in
+   `frontend/next.config.ts` is what makes relying on it safe: if Vercel ever stops honouring the
+   field, the build fails with a named cause instead of quietly shipping the localhost fallback.
+   Should that happen, set the variable in project settings for all three environments.
 4. The API already allows `https://spec-guard-ai.vercel.app` via `CORS_ORIGINS` in `render.yaml`.
    If this project deploys to a different domain, add it there and re-sync the blueprint. Copy the
    origin from Vercel rather than assuming it: `specguard-ai.vercel.app` is someone else's
