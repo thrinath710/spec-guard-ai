@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_BASE_URL": "https://specguard-api-ngrt.onrender.com/api/v1"
+    }
+  }
+}

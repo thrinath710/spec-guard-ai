@@ -42,9 +42,13 @@ services:
         value: "true"
       - key: EMBEDDING_MODEL
         value: BAAI/bge-small-en-v1.5
-      # Set to the deployed frontend origin once it exists.
+      # Every browser origin that may call this API. Pinned rather than sync:false for the same
+      # reason as NEXT_PUBLIC_API_BASE_URL: these are public hostnames, not secrets, and leaving
+      # them to be typed into a dashboard is what let the two frontends drift apart. Both are
+      # listed because the app is deployed twice — Render's own web service and Vercel. Add any
+      # further origin here rather than in the dashboard, or a blueprint sync will drop it.
       - key: CORS_ORIGINS
-        sync: false
+        value: '["https://specguard-web.onrender.com","https://spec-guard-ai.vercel.app"]'
 
   - type: web
     name: specguard-web

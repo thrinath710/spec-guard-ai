@@ -69,14 +69,14 @@ the CDN, so it never cold-starts the way a sleeping Render web service does.
 2. Set **Root Directory** to `frontend`. This is the only setting that matters — the repo root
    holds the Python backend, and Vercel will otherwise fail to detect a framework. It cannot be
    set from a committed file, only in project settings or during import.
-3. Add the environment variable `NEXT_PUBLIC_API_BASE_URL` =
-   `https://specguard-api-ngrt.onrender.com/api/v1` for **all** environments. Vercel has no
-   equivalent of the blueprint, so this one is manual — miss it and the build bakes in the
-   `http://localhost:8000/api/v1` fallback, which resolves to the *visitor's* machine.
-4. Deploy, then add the resulting origin to the API's `CORS_ORIGINS` on Render, e.g.
-   `["https://specguard-web.onrender.com","https://spec-guard-ai.vercel.app"]`, and restart the
-   API service. Copy that origin from Vercel too: `specguard-ai.vercel.app` is someone else's
-   project; this one deploys to the hyphenated `spec-guard-ai.vercel.app`.
+3. `NEXT_PUBLIC_API_BASE_URL` comes from `frontend/vercel.json` (`build.env`), so it applies to
+   Production and Preview alike with nothing to set in the dashboard. A value set in project
+   settings takes precedence over the file, so if the two ever disagree, the dashboard wins —
+   delete it there rather than editing both.
+4. The API already allows `https://spec-guard-ai.vercel.app` via `CORS_ORIGINS` in `render.yaml`.
+   If this project deploys to a different domain, add it there and re-sync the blueprint. Copy the
+   origin from Vercel rather than assuming it: `specguard-ai.vercel.app` is someone else's
+   project; this one is the hyphenated `spec-guard-ai.vercel.app`.
 
 `NEXT_PUBLIC_*` values are inlined at build time, so changing the variable requires a redeploy
 on Vercel too — not just a restart.
